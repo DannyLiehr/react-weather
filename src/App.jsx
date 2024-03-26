@@ -27,32 +27,33 @@ function getCardinalDirection(deg) {
 }
 
 function App() {
-  const [count, setCount] = useState(0);
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setLocation({ latitude, longitude });
-      },
-      (error) => {
-        if (error.code === error.TIMEOUT) {
-          setError('Unable to retrieve location. Please try again.');
-        } else {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocation({ latitude, longitude });
+        },
+        (error) => {
           setError(error.message);
-        }
-      },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-    );
-  }, []);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } // Options for accuracy and freshness
+      );
+      fetchWeather();
+    } else {
+      setError('Geolocation is not supported by your browser.');
+    }
+  }, []); // Empty dependency array [] ensures fetchWeather runs only once on mount
+  
   
 
   const fetchWeather = async () => {
     // Implement your weather API call using location data and handle errors
     if (!location) {
-      return; // Prevent unnecessary API calls if location is not available
+      return document.querySelector("#error").innerHTML="Could not fetch location."
     }
 
     const { latitude, longitude } = location;
@@ -66,6 +67,7 @@ function App() {
        // Display the weather data
        document.querySelector("#weatherinf").style.display="block";
        document.querySelector("#loading").style.display="none";
+       document.querySelector("#error").style.display="none";
        document.querySelector("#loc").innerHTML=weatherData.name;
        document.querySelector("#desc").innerHTML=weatherData.weather[0].description;
        // Temperatures
@@ -94,6 +96,7 @@ function App() {
       <div>
         <h1 id="loc">The Weather</h1>
         <img id="loading" src="https://cdn.pixabay.com/animation/2023/10/10/13/27/13-27-45-28_512.gif"/>
+        <p id="error"></p>
         <div id="weatherinf">
           <h2 id="desc">Description</h2>
           <img id="weathericon" />
@@ -109,12 +112,7 @@ function App() {
           <p>Sunrise: <span id="sunrise">0</span></p>
           <p>Sunset: <span id="sunset">0</span></p>
         </div>
-        
-        {error ? (
-  <p>Error: {error}</p>
-) : location ? (
-  <p>Locating your area...</p>
-) : null}
+
       </div>
     </>
   );
