@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 
 import './App.css';
 
-function getCardinalDirection(deg) {
+function App() {
+  function getCardinalDirection(deg) {
   // Define ranges for each cardinal direction
   const directions = {
     "N": { min: 348.75, max: 359.9999 },
@@ -26,7 +27,6 @@ function getCardinalDirection(deg) {
   return "Unknown";
 }
 
-function App() {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
 
@@ -42,7 +42,7 @@ function App() {
         },
         { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } // Options for accuracy and freshness
       );
-      fetchWeather();
+      fetchWeather(location);
     } else {
       setError('Geolocation is not supported by your browser.');
     }
@@ -50,8 +50,9 @@ function App() {
   
   
 
-  const fetchWeather = async () => {
+  const fetchWeather = async (location) => {
     // Implement your weather API call using location data and handle errors
+    console.log(location)
     if (!location) {
       return document.querySelector("#error").innerHTML="Could not fetch location."
     }
@@ -86,6 +87,7 @@ function App() {
        document.querySelector("#sunrise").innerHTML=`${new Date(weatherData.sys.sunrise * 1000).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}`;
        document.querySelector("#sunset").innerHTML=`${new Date(weatherData.sys.sunset * 1000).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}`;
 
+      // console.log(weatherData)
     } catch (error) {
       console.error(error);
     }
