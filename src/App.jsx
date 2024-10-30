@@ -27,38 +27,19 @@ function App() {
   return "Unknown";
 }
 
-  const [location, setLocation] = useState(null);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setLocation({ latitude, longitude });
-        },
-        (error) => {
-          setError(error.message);
-        },
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } // Options for accuracy and freshness
-      );
-      fetchWeather(location);
-    } else {
-      setError('Geolocation is not supported by your browser.');
-    }
-  }, []); // Empty dependency array [] ensures fetchWeather runs only once on mount
+  const [location, setLocation] = useState("");
+  const [error, setError] = useState("");
   
   
 
   const fetchWeather = async (location) => {
     // Implement your weather API call using location data and handle errors
-    console.log(location)
+
     if (!location) {
       return document.querySelector("#error").innerHTML="Could not fetch location."
     }
 
-    const { latitude, longitude } = location;
-    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=imperial&appid=${import.meta.env.VITE_API_TOKEN}`;
+    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${location.join(",")}&appid=${import.meta.env.VITE_API_TOKEN}&units=imperial`;
     try {
       const response = await fetch(apiUrl);
       if (!response.ok) {
@@ -87,11 +68,23 @@ function App() {
        document.querySelector("#sunrise").innerHTML=`${new Date(weatherData.sys.sunrise * 1000).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}`;
        document.querySelector("#sunset").innerHTML=`${new Date(weatherData.sys.sunset * 1000).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}`;
 
-      // console.log(weatherData)
+      console.log(weatherData)
     } catch (error) {
       console.error(error);
     }
   };
+
+  async function submitFunc(e){
+    e.preventDefault();
+    // console.log("Hey");
+    const town = document.querySelector("#town").value;
+    const state = document.querySelector("#state").value;
+    const country = document.querySelector("#country").value;
+    if (!town || !state || !country){
+      return;
+    }
+    return await fetchWeather([town, state, country]);
+  }
 
   return (
     <>
@@ -99,13 +92,28 @@ function App() {
         <h1 id="loc">The Weather</h1>
         <img id="loading" src="https://cdn.pixabay.com/animation/2023/10/10/13/27/13-27-45-28_512.gif"/>
         <p id="error"></p>
+        <form onSubmit={submitFunc}>
+          <label htmlFor="town">City Name 
+            <input type="text" id="town" placeholder="Los Angeles" defaultValue="Los Angeles" />
+          </label>
+          <br/>
+          <label htmlFor="state">State 
+            <input type="text" id="state" placeholder="California" defaultValue="California" />
+          </label>
+          <br/>
+          <label htmlFor="country">Country 
+            <input type="text" id="country" placeholder="US" defaultValue="US" min="2" max="2" />
+          </label>
+          <br/>
+          <input type="submit" value="Get Weather" />
+        </form>
         <div id="weatherinf">
           <h2 id="desc">Description</h2>
           <img id="weathericon" />
           <h3><span id="temp">0</span></h3>
           <h4>Feels Like <span id="feelslike">0</span></h4>
           <div id="highlowflex">
-            <h4>High: <span id="high">0</span></h4>
+            <h4>High: <span id="high">0</span></h4> | 
             <h4>Low: <span id="low">0</span></h4>
           </div>
           
